@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relació de Freqüències i Percentatges - PCMAT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #1e293b;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    /* Capçalera estil PCMAT */
+    .pcmat-header {
+      background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(4, 120, 87, 0.15);
+    }
+
+    /* Targetes d'emparellament */
+    .match-card {
+      background-color: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 15px 18px;
+      font-size: 0.935rem;
+      font-weight: 600;
+      color: #1e293b;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .match-card:hover:not(.evaluated-card) {
+      border-color: #10b981;
+      background-color: #f0fdf4;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(4, 120, 87, 0.08);
+    }
+
+    /* Estat seleccionat (esperant parella) */
+    .match-card.selected {
+      border-color: #047857;
+      border-width: 2px;
+      background-color: #ecfdf5;
+      color: #064e3b;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Estat emparellat abans d'avaluar */
+    .match-card.paired {
+      border-color: #059669;
+      background-color: #f0fdf4;
+      color: #065f46;
+    }
+
+    /* Estats després d'avaluar */
+    .match-card.correct {
+      border-color: #16a34a;
+      background-color: #dcfce7;
+      color: #14532d;
+    }
+
+    .match-card.incorrect {
+      border-color: #dc2626;
+      background-color: #fee2e2;
+      color: #7f1d1d;
+    }
+
+    /* Punts d'ancoratge visuals a les vores */
+    .anchor-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #cbd5e1;
+      border: 2px solid #ffffff;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: background-color 0.2s, transform 0.2s;
+    }
+
+    .anchor-right {
+      right: -5px;
+    }
+
+    .anchor-left {
+      left: -5px;
+    }
+
+    .match-card.selected .anchor-dot,
+    .match-card.paired .anchor-dot {
+      background-color: #047857;
+      transform: translateY(-50%) scale(1.2);
+    }
+
+    .match-card.correct .anchor-dot {
+      background-color: #16a34a;
+    }
+
+    .match-card.incorrect .anchor-dot {
+      background-color: #dc2626;
+    }
+
+    /* Línies SVG */
+    .connector-path {
+      fill: none;
+      stroke-linecap: round;
+      transition: stroke 0.25s ease, stroke-width 0.2s ease;
+      cursor: pointer;
+    }
+
+    .connector-path:hover {
+      stroke-width: 4.5;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feedback-banner {
+      animation: fadeSlide 0.25s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="pb-12">
+
+  <!-- CONTENIDOR SUPERIOR AMB MARGE BLANC -->
+  <div class="bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 pt-3 pb-3">
+      <!-- CAPÇALERA VERDA -->
+      <header class="pcmat-header px-5 sm:px-7 py-4 sm:py-5 text-white">
+        <!-- Fil d'Ariadna -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <nav class="text-xs font-medium text-emerald-100/90 flex items-center gap-1.5">
+            <span>PCMAT</span>
+            <span class="opacity-70">›</span>
+            <span>Llenguatge Matemàtic</span>
+            <span class="opacity-70">›</span>
+            <span class="text-white font-semibold">Activitat 01</span>
+          </nav>
+        </div>
+
+        <!-- Títol principal -->
+        <div class="flex items-start sm:items-center gap-3.5">
+          <span class="bg-white text-[#047857] font-extrabold text-sm sm:text-base px-3 py-1 rounded-md tracking-tight shrink-0 shadow-xs">
+            PCMAT
+          </span>
+          <div>
+            <h1 class="text-lg sm:text-2xl font-bold tracking-tight text-white leading-snug">
+              Relació de Freqüències i Percentatges
+            </h1>
+            <p class="text-xs sm:text-sm text-emerald-100 mt-0.5">
+              Associa cada expressió verbal amb el seu percentatge o fracció correspondent
+            </p>
+          </div>
+        </div>
+      </header>
+    </div>
+
+    <!-- BARRA D'ESTAT I CONTROLS -->
+    <div class="border-t border-slate-100 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+        <!-- Pastilles d'estat -->
+        <div class="flex items-center gap-2.5">
+          <div class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs sm:text-sm font-medium text-slate-600 shadow-2xs">
+            Parelles: <span id="pairs-count" class="font-bold text-[#047857]">0</span> / <span class="font-semibold text-slate-700">6</span>
+          </div>
+          <div class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs sm:text-sm font-medium text-slate-600 shadow-2xs">
+            Puntuació: <span id="score-display" class="font-bold text-slate-800">--</span>
+          </div>
+        </div>
+
+        <!-- Botons d'acció -->
+        <div class="flex items-center gap-2.5">
+          <button onclick="resetActivity(true)" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-300 bg-white hover:bg-slate-50 active:bg-slate-100 text-xs sm:text-sm font-semibold text-slate-700 transition-colors cursor-pointer">
+            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span>Reiniciar</span>
+          </button>
+
+          <button id="btn-evaluate" onclick="evaluatePairs()" class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#047857] hover:bg-[#065f46] active:bg-[#064e3b] text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>Avaluar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZONA PRINCIPAL DE JOC -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+
+    <!-- Missatge de retroacció (ocult per defecte) -->
+    <div id="feedback-container" class="hidden mb-5"></div>
+
+    <!-- Tauler d'associació amb capa SVG -->
+    <div id="board-wrapper" class="relative">
+      <!-- Capa SVG per dibuixar les línies corbes entre A i B -->
+      <svg id="connections-svg" class="absolute inset-0 w-full h-full pointer-events-none z-0" aria-hidden="true"></svg>
+
+      <!-- Dues columnes amb espai central -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-y-6 md:gap-x-6 items-start">
+
+        <!-- COLUMNA A: EXPRESSIÓ VERBAL -->
+        <div class="md:col-span-5 space-y-3">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-5 h-5 rounded bg-[#d1fae5] text-[#047857] font-bold text-xs flex items-center justify-center">
+              A
+            </span>
+            <h2 class="text-xs font-bold tracking-wider uppercase text-slate-500">
+              EXPRESSIÓ VERBAL
+            </h2>
+          </div>
+
+          <div id="column-a" class="space-y-3">
+            <!-- Generat per JavaScript -->
+          </div>
+        </div>
+
+        <!-- ESPAI CENTRAL PER A LES LÍNIES DE CONNEXIÓ -->
+        <div class="hidden md:block md:col-span-2"></div>
+
+        <!-- COLUMNA B: VALOR / PERCENTATGE -->
+        <div class="md:col-span-5 space-y-3">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-5 h-5 rounded bg-[#d1fae5] text-[#047857] font-bold text-xs flex items-center justify-center">
+              B
+            </span>
+            <h2 class="text-xs font-bold tracking-wider uppercase text-slate-500">
+              VALOR / PERCENTATGE
+            </h2>
+          </div>
+
+          <div id="column-b" class="space-y-3">
+            <!-- Generat per JavaScript -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Nota d'ajuda inferior -->
+    <div class="mt-8 text-center text-xs text-slate-400">
+      Clica una targeta de la columna <strong class="text-slate-500">A</strong> i després la seva parella de la columna <strong class="text-slate-500">B</strong> (o arrossega-la). Clica sobre una línia o targeta emparellada per desfer la unió.
+    </div>
+  </main>
+
+  <script>
+    // DADES DE L'ACTIVITAT (Parelles correctes)
+    const PAIRS_DATA = [
+      { id: 'p1', left: 'Sempre / Segur', right: '100%' },
+      { id: 'p2', left: 'Gairebé sempre', right: '90%' },
+      { id: 'p3', left: 'A vegades / Equiprobable', right: '50% (1/2)' },
+      { id: 'p4', left: 'Un de cada quatre', right: '25% (1/4)' },
+      { id: 'p5', left: 'Gairebé mai', right: '10%' },
+      { id: 'p6', left: 'Mai / Impossible', right: '0%' }
+    ];
+
+    // Ordre inicial exacte de la captura de pantalla per la columna B
+    const INITIAL_RIGHT_ORDER = ['p2', 'p3', 'p5', 'p1', 'p4', 'p6'];
+
+    // ESTAT DE L'APLICACIÓ
+    const state = {
+      rightOrder: [...INITIAL_RIGHT_ORDER],
+      selectedSide: null,     // 'A' o 'B'
+      selectedId: null,       // id de la targeta seleccionada
+      connections: {},        // mapa leftId -> rightId
+      evaluated: false,
+      dragSource: null        // { side, id }
+    };
+
+    // INICIALITZACIÓ
+    window.addEventListener('DOMContentLoaded', () => {
+      renderBoard();
+      window.addEventListener('resize', drawConnections);
+
+      // Observar canvis de mida del tauler per recalcular línies SVG
+      const wrapper = document.getElementById('board-wrapper');
+      if (window.ResizeObserver && wrapper) {
+        const ro = new ResizeObserver(() => drawConnections());
+        ro.observe(wrapper);
+      }
+    });
+
+    // RENDERITZAR LES DUES COLUMNES
+    function renderBoard() {
+      const colA = document.getElementById('column-a');
+      const colB = document.getElementById('column-b');
+      colA.innerHTML = '';
+      colB.innerHTML = '';
+
+      // Renderitzar Columna A (ordre fix 1..6)
+      PAIRS_DATA.forEach(item => {
+        const card = createCardElement('A', item.id, item.left);
+        colA.appendChild(card);
+      });
+
+      // Renderitzar Columna B (ordre actual)
+      state.rightOrder.forEach(id => {
+        const item = PAIRS_DATA.find(p => p.id === id);
+        const card = createCardElement('B', item.id, item.right);
+        colB.appendChild(card);
+      });
+
+      updateCardsVisualState();
+      updateStatusBar();
+      requestAnimationFrame(drawConnections);
+    }
+
+    // CREAR ELEMENT DE TARGETA
+    function createCardElement(side, id, text) {
+      const div = document.createElement('div');
+      div.className = 'match-card';
+      div.dataset.side = side;
+      div.dataset.id = id;
+      div.id = `card-${side}-${id}`;
+      div.draggable = true;
+
+      const labelSpan = document.createElement('span');
+      labelSpan.textContent = text;
+      div.appendChild(labelSpan);
+
+      // Icona d'estat (només visible quan s'avalua)
+      const statusBadge = document.createElement('span');
+      statusBadge.className = 'status-badge ml-2 shrink-0';
+      div.appendChild(statusBadge);
+
+      // Punt d'ancoratge per a les línies SVG
+      const dot = document.createElement('span');
+      dot.className = `anchor-dot ${side === 'A' ? 'anchor-right' : 'anchor-left'}`;
+      div.appendChild(dot);
+
+      // Clic per seleccionar / emparellar / desfer
+      div.addEventListener('click', () => handleCardClick(side, id));
+
+      // Suport d'arrossegar i deixar anar (Drag & Drop)
+      div.addEventListener('dragstart', (e) => {
+        if (state.evaluated) {
+          e.preventDefault();
+          return;
+        }
+        state.dragSource = { side, id };
+        state.selectedSide = side;
+        state.selectedId = id;
+        updateCardsVisualState();
+        e.dataTransfer.effectAllowed = 'link';
+      });
+
+      div.addEventListener('dragover', (e) => {
+        if (state.evaluated) return;
+        if (state.dragSource && state.dragSource.side !== side) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'link';
+        }
+      });
+
+      div.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (state.evaluated || !state.dragSource) return;
+        if (state.dragSource.side !== side) {
+          const leftId = side === 'A' ? id : state.dragSource.id;
+          const rightId = side === 'B' ? id : state.dragSource.id;
+          createConnection(leftId, rightId);
+          state.selectedSide = null;
+          state.selectedId = null;
+          state.dragSource = null;
+          updateCardsVisualState();
+          updateStatusBar();
+          drawConnections();
+        }
+      });
+
+      div.addEventListener('dragend', () => {
+        state.dragSource = null;
+      });
+
+      return div;
+    }
+
+    // GESTIÓ DE CLICS A LES TARGETES
+    function handleCardClick(side, id) {
+      if (state.evaluated) return;
+
+      // Si ja hi ha una targeta seleccionada al MATEIX costat
+      if (state.selectedSide === side) {
+        if (state.selectedId === id) {
+          // Desseleccionar-la
+          state.selectedSide = null;
+          state.selectedId = null;
+        } else {
+          // Canviar la selecció a aquesta nova targeta
+          state.selectedId = id;
+        }
+        updateCardsVisualState();
+        return;
+      }
+
+      // Si hi ha una targeta seleccionada a l'ALTRE costat -> crear connexió!
+      if (state.selectedSide && state.selectedSide !== side) {
+        const leftId = side === 'A' ? id : state.selectedId;
+        const rightId = side === 'B' ? id : state.selectedId;
+        createConnection(leftId, rightId);
+        state.selectedSide = null;
+        state.selectedId = null;
+        updateCardsVisualState();
+        updateStatusBar();
+        drawConnections();
+        return;
+      }
+
+      // Si no hi havia cap targeta seleccionada:
+      // Comprovar si aquesta targeta ja estava emparellada per desfer-la o seleccionar-la
+      if (side === 'A' && state.connections[id]) {
+        delete state.connections[id];
+        state.selectedSide = 'A';
+        state.selectedId = id;
+      } else if (side === 'B') {
+        const existingLeft = Object.keys(state.connections).find(k => state.connections[k] === id);
+        if (existingLeft) {
+          delete state.connections[existingLeft];
+        }
+        state.selectedSide = 'B';
+        state.selectedId = id;
+      } else {
+        state.selectedSide = side;
+        state.selectedId = id;
+      }
+
+      updateCardsVisualState();
+      updateStatusBar();
+      drawConnections();
+    }
+
+    // CREAR CONNEXIÓ 1-A-1 ENTRE ESQUERRA I DRETA
+    function createConnection(leftId, rightId) {
+      // Eliminar qualsevol connexió prèvia que fes servir aquest rightId
+      Object.keys(state.connections).forEach(k => {
+        if (state.connections[k] === rightId) {
+          delete state.connections[k];
+        }
+      });
+      // Assignar nova parella
+      state.connections[leftId] = rightId;
+    }
+
+    // ACTUALITZAR ESTILS DE TOTES LES TARGETES
+    function updateCardsVisualState() {
+      const pairedLeftIds = new Set(Object.keys(state.connections));
+      const pairedRightIds = new Set(Object.values(state.connections));
+
+      document.querySelectorAll('.match-card').forEach(card => {
+        const side = card.dataset.side;
+        const id = card.dataset.id;
+        const badge = card.querySelector('.status-badge');
+
+        card.classList.remove('selected', 'paired', 'correct', 'incorrect', 'evaluated-card');
+        badge.innerHTML = '';
+
+        if (state.evaluated) {
+          card.classList.add('evaluated-card');
+          if (side === 'A') {
+            const connectedRight = state.connections[id];
+            if (connectedRight === id) {
+              card.classList.add('correct');
+              badge.innerHTML = `<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-600 text-white text-xs font-bold">✓</span>`;
+            } else {
+              card.classList.add('incorrect');
+              const correctText = PAIRS_DATA.find(p => p.id === id).right;
+              badge.innerHTML = `<span class="text-xs font-bold text-red-700 bg-white/80 px-2 py-0.5 rounded border border-red-200">→ ${correctText}</span>`;
+            }
+          } else {
+            const connectedLeft = Object.keys(state.connections).find(k => state.connections[k] === id);
+            if (connectedLeft === id) {
+              card.classList.add('correct');
+              badge.innerHTML = `<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-600 text-white text-xs font-bold">✓</span>`;
+            } else if (connectedLeft) {
+              card.classList.add('incorrect');
+              badge.innerHTML = `<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-xs font-bold">✕</span>`;
+            }
+          }
+          return;
+        }
+
+        // Mode interactiu (no avaluat)
+        if (state.selectedSide === side && state.selectedId === id) {
+          card.classList.add('selected');
+        } else if ((side === 'A' && pairedLeftIds.has(id)) || (side === 'B' && pairedRightIds.has(id))) {
+          card.classList.add('paired');
+        }
+      });
+    }
+
+    // DIBUIXAR LÍNIES CORBES SVG ENTRE LES PARELLES
+    function drawConnections() {
+      const svg = document.getElementById('connections-svg');
+      const wrapper = document.getElementById('board-wrapper');
+      if (!svg || !wrapper) return;
+
+      svg.innerHTML = '';
+      const wrapperRect = wrapper.getBoundingClientRect();
+
+      Object.entries(state.connections).forEach(([leftId, rightId]) => {
+        const cardA = document.getElementById(`card-A-${leftId}`);
+        const cardB = document.getElementById(`card-B-${rightId}`);
+        if (!cardA || !cardB) return;
+
+        const rectA = cardA.getBoundingClientRect();
+        const rectB = cardB.getBoundingClientRect();
+
+        // Coordenades relatives al wrapper
+        const x1 = rectA.right - wrapperRect.left;
+        const y1 = rectA.top + rectA.height / 2 - wrapperRect.top;
+        const x2 = rectB.left - wrapperRect.left;
+        const y2 = rectB.top + rectB.height / 2 - wrapperRect.top;
+
+        // Punts de control Bezier horitzontals suaus
+        const dx = Math.abs(x2 - x1) * 0.5;
+        const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+
+        let strokeColor = '#047857';
+        if (state.evaluated) {
+          strokeColor = leftId === rightId ? '#16a34a' : '#dc2626';
+        }
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathData);
+        path.setAttribute('stroke', strokeColor);
+        path.setAttribute('stroke-width', '3');
+        path.setAttribute('class', 'connector-path');
+        path.style.pointerEvents = state.evaluated ? 'none' : 'stroke';
+
+        // Permetre eliminar la connexió clicant directament sobre la línia
+        path.addEventListener('click', () => {
+          if (state.evaluated) return;
+          delete state.connections[leftId];
+          updateCardsVisualState();
+          updateStatusBar();
+          drawConnections();
+        });
+
+        svg.appendChild(path);
+      });
+    }
+
+    // ACTUALITZAR BARRA D'ESTAT
+    function updateStatusBar() {
+      const count = Object.keys(state.connections).length;
+      document.getElementById('pairs-count').textContent = count;
+
+      const scoreEl = document.getElementById('score-display');
+      if (!state.evaluated) {
+        scoreEl.textContent = '--';
+        scoreEl.className = 'font-bold text-slate-800';
+      }
+    }
+
+    // AVALUAR RESPOSTES
+    function evaluatePairs() {
+      const count = Object.keys(state.connections).length;
+      if (count < PAIRS_DATA.length) {
+        showFeedback(
+          `Encara et falten parelles per connectar (${count} de ${PAIRS_DATA.length}). Associa totes les expressions abans d'avaluar!`,
+          'warning'
+        );
+        return;
+      }
+
+      state.evaluated = true;
+      state.selectedSide = null;
+      state.selectedId = null;
+
+      let correctCount = 0;
+      PAIRS_DATA.forEach(item => {
+        if (state.connections[item.id] === item.id) {
+          correctCount++;
+        }
+      });
+
+      const scoreEl = document.getElementById('score-display');
+      scoreEl.textContent = `${correctCount} / ${PAIRS_DATA.length}`;
+      scoreEl.className = correctCount === PAIRS_DATA.length
+        ? 'font-bold text-green-700'
+        : 'font-bold text-amber-700';
+
+      if (correctCount === PAIRS_DATA.length) {
+        showFeedback(
+          `Excel·lent! Has associat correctament les ${PAIRS_DATA.length} expressions de probabilitat i freqüència.`,
+          'success'
+        );
+      } else {
+        showFeedback(
+          `Has encertat ${correctCount} de ${PAIRS_DATA.length} parelles. Revisa les targetes marcades en vermell per veure la correspondència correcta.`,
+          'error'
+        );
+      }
+
+      updateCardsVisualState();
+      drawConnections();
+    }
+
+    // REINICIAR ACTIVITAT (I BARREJAR COLUMNA B)
+    function resetActivity(shuffle = true) {
+      state.connections = {};
+      state.selectedSide = null;
+      state.selectedId = null;
+      state.evaluated = false;
+
+      if (shuffle) {
+        // Barrejar ordre de la columna B assegurant que no quedi igual que l'anterior
+        const ids = PAIRS_DATA.map(p => p.id);
+        for (let i = ids.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [ids[i], ids[j]] = [ids[j], ids[i]];
+        }
+        state.rightOrder = ids;
+      }
+
+      hideFeedback();
+      renderBoard();
+    }
+
+    // BANNERS DE FEEDBACK
+    function showFeedback(message, type) {
+      const container = document.getElementById('feedback-container');
+      container.classList.remove('hidden');
+
+      let styles = 'bg-emerald-50 border-emerald-200 text-emerald-900';
+      let icon = '✓';
+      if (type === 'warning') {
+        styles = 'bg-amber-50 border-amber-200 text-amber-900';
+        icon = '!';
+      } else if (type === 'error') {
+        styles = 'bg-rose-50 border-rose-200 text-rose-900';
+        icon = '✕';
+      }
+
+      container.innerHTML = `
+        <div class="feedback-banner flex items-center justify-between gap-3 px-4 py-3 rounded-xl border ${styles} text-sm font-medium shadow-2xs">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center font-bold text-xs shrink-0">${icon}</span>
+            <span>${message}</span>
+          </div>
+          <button onclick="hideFeedback()" class="text-xs opacity-60 hover:opacity-100 px-1.5 py-0.5 cursor-pointer">✕</button>
+        </div>
+      `;
+    }
+
+    function hideFeedback() {
+      const container = document.getElementById('feedback-container');
+      container.classList.add('hidden');
+      container.innerHTML = '';
+    }
+  </script>
+</body>
+</html>
